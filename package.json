@@ -1,0 +1,32 @@
+{
+  "name": "axispass",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "AxisPass - NFT Access Infrastructure on BOT Chain Testnet",
+  "scripts": {
+    "compile:contract": "node scripts/compile-contract.js",
+    "predev": "npm run compile:contract",
+    "dev": "vite",
+    "prebuild": "npm run compile:contract",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "5.0.2",
+    "@reown/appkit": "^1.8.23",
+    "@reown/appkit-adapter-wagmi": "^1.8.23",
+    "@tanstack/react-query": "^5.101.4",
+    "qrcode.react": "^4.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "viem": "^2.55.17",
+    "wagmi": "^2.19.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.2",
+    "solc": "0.8.24",
+    "vite": "^5.4.8"
+  }
+}
