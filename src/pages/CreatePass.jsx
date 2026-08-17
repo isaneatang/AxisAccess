@@ -37,6 +37,7 @@ import { txExplorerUrl, addressExplorerUrl, shortenAddress, copyToClipboard } fr
 import TransactionStatus from "../components/TransactionStatus";
 import NetworkGate from "../components/NetworkGate";
 import WalletModal from "../components/WalletModal";
+import TierSelect from "../components/TierSelect";
 
 const EMPTY_FORM = {
   productName: "",
@@ -296,13 +297,18 @@ export default function CreatePass() {
             <label className="form-label" htmlFor="accessTier">
               Access Tier
             </label>
-            <select id="accessTier" className="form-input" value={form.accessTier} onChange={set("accessTier")}>
-              {ACCESS_TIERS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+            {/* Custom dropdown, not a native <select>: in-app wallet browsers
+                (Bitget, OKX, Zerion) swallow the native option picker, so the
+                list is built from plain buttons that work in every WebView. */}
+            <TierSelect
+              id="accessTier"
+              value={form.accessTier}
+              options={ACCESS_TIERS}
+              onChange={(value) => {
+                setForm((f) => ({ ...f, accessTier: value }));
+                setErrors((prev) => ({ ...prev, accessTier: null }));
+              }}
+            />
             {errors.accessTier && <p className="field-error">{errors.accessTier}</p>}
           </div>
 
