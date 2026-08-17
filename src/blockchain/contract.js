@@ -17,7 +17,7 @@
  * clients.js, so they work before any wallet connects.
  */
 
-import { parseEther, parseEventLogs, zeroAddress } from "viem";
+import { parseEther, parseEventLogs, zeroAddress, encodeDeployData } from "viem";
 import { accessPassAbi, accessPassBytecode } from "./artifact";
 import { getPublicClient } from "./clients";
 import { ACTIVE_CHAIN } from "../config/chains";
@@ -28,6 +28,20 @@ import { ACTIVE_CHAIN } from "../config/chains";
 
 /**
  * Deploy a brand-new AccessPass collection through the creator's wallet.
+ *
+ * Gas strategy (this is the part that breaks on mobile wallets):
+ *
+ * By default viem asks the WALLET to estimate gas and fees
+ * (eth_estimateGas / eth_maxPriorityFeePerGas over the Reown provider).
+ * Mobile wallets frequently cannot do this for a large deploy on a custom
+ * testnet chain: they do not have chain 968 configured, or their RPC for it
+ * chokes on a big constructor payload ("Unable to estimate gas fee",
+ * "No network", "Can't connect").
+ *
+ * So we build the full calldata here, estimate the gas limit against the
+ * PUBLIC BOT Chain RPC (the one we know works), add 30% headroom, and hand
+ * the wallet a fully-specified request: { from, data, gas, gasPrice }.
+ * The wallet then only has to sign and relay it, not simulate it.
  *
  * @param {object} params
  * @param {string} params.name          ERC-721 name, e.g. "AI Pro Pass"
@@ -41,20 +55,56 @@ import { ACTIVE_CHAIN } from "../config/chains";
  * @returns {Promise<string>} txHash (use confirmTransaction to get the
  *          receipt + contract address)
  */
-export function deployCollection(params, walletClient) {
+export async function deployCollection(params, walletClient) {
+  const args = [
+    params.name,
+    params.symbol,
+    params.productName,
+    params.accessTier,
+    BigInt(params.maxSupply),
+    // parseEther, never Number(). Decimal precision is precious.
+    parseEther(String(params.mintPriceBOT)),
+    params.metadataURI,
+  ];
+
+  // The exact bytes that will go on-chain (bytecode + encoded constructor
+  // args). We need them twice, so encode once.
+  const calldata = encodeDeployData({
+    abi: accessPassAbi,
+    bytecode: accessPassBytecode,
+    args,
+  });
+
+  // Estimate the gas limit against our own RPC, not the wallet's.
+  let gas;
+  try {
+    const estimated = await getPublicClient().estimateGas({
+      account: walletClient.account.address,
+      data: calldata,
+    });
+    // +30% headroom: constructor execution and storage writes are the
+    // variable part, and an out-of-gas deploy is worse than a generous cap.
+    gas = (estimated * 130n) / 100n;
+  } catch {
+    // Estimation failed (transient RPC hiccup, or a payload at the edge of
+    // what the RPC will simulate). Fall back to a size-derived cap: base
+    // constructor cost + calldata cost. gasPrice is ~free on this testnet,
+    // so an over-generous limit only costs a little balance, never a revert.
+    gas = 3_000_000n + BigInt(calldata.length) * 400n;
+  }
+
+  // The wallet also cannot be trusted to pick fees for an unknown chain, so
+  // fetch the current gas price from our own RPC and pass it explicitly.
+  // This skips viem's wallet-side fee detection (getBlock + maxPriorityFee)
+  // entirely, leaving the wallet with nothing to estimate.
+  const gasPrice = await getPublicClient().getGasPrice();
+
   return walletClient.deployContract({
     abi: accessPassAbi,
     bytecode: accessPassBytecode,
-    args: [
-      params.name,
-      params.symbol,
-      params.productName,
-      params.accessTier,
-      BigInt(params.maxSupply),
-      // parseEther, never Number(). Decimal precision is precious.
-      parseEther(String(params.mintPriceBOT)),
-      params.metadataURI,
-    ],
+    args,
+    gas,
+    gasPrice,
   });
 }
 

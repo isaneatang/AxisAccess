@@ -25,7 +25,7 @@ import { compressImage } from "../utils/image";
 import { saveCollection } from "../utils/storage";
 import { friendlyErrorMessage } from "../utils/errors";
 import { useTxFlow } from "../utils/tx";
-import { ACCESS_TIERS } from "../config/constants";
+import { ACCESS_TIERS, MAX_IMAGE_DIMENSION, MAX_METADATA_URI_LENGTH } from "../config/constants";
 import {
   validateProductName,
   validateDescription,
@@ -48,12 +48,12 @@ const EMPTY_FORM = {
 };
 
 export default function CreatePass() {
-  const { isConnected, isOnActiveNetwork, walletClient, publicClient } = useWallet();
+  const { isConnected, isOnActiveNetwork, walletClient, publicClient, switchToActiveNetwork } = useWallet();
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [copied, setCopied] = useState(null);
-  const { status, message, result, run, reset } = useTxFlow();
+  const { status, message, result, rawError, run, reset } = useTxFlow();
 
   const symbol = useMemo(() => {
     const base = (form.productName || "PASS")
@@ -107,6 +107,16 @@ export default function CreatePass() {
       return;
     }
 
+    // Never fire a deployment from the wrong network. Ask the wallet to
+    // switch to BOT Chain Testnet first (with its own approval UI); if it
+    // cannot, stop here - the friendly error + manual add-chain hint are
+    // shown by NetworkGate. Deploying anyway is how you get "No network" /
+    // "Can't connect" from mobile wallets.
+    if (!isOnActiveNetwork) {
+      const switched = await switchToActiveNetwork();
+      if (!switched?.ok) return;
+    }
+
     const metadataURI = buildMetadataURI({
       name: `${form.productName} Pass`,
       description: form.description,
@@ -115,6 +125,18 @@ export default function CreatePass() {
       maxSupply: form.supply,
       mintPriceBOT: form.price,
     });
+
+    // The metadata URI is a constructor argument: every kilobyte of it is
+    // deployment gas. Over the cap and the deploy gets too expensive to
+    // estimate reliably (this is a big part of the mobile-wallet deploy
+    // failures). Reject early with a clear, actionable message.
+    if (metadataURI.length > MAX_METADATA_URI_LENGTH) {
+      setErrors((prev) => ({
+        ...prev,
+        image: `This image is too large to store on-chain. Use a smaller or simpler image (max ~${MAX_IMAGE_DIMENSION}px).`,
+      }));
+      return;
+    }
 
     const { status: flowStatus, result: flowResult, error } = await run(
       () =>
@@ -137,7 +159,8 @@ export default function CreatePass() {
         pending: "Deployment submitted. Waiting for confirmation...",
         confirming: "Deployment confirmed. Registering your collection...",
         success: "Collection deployed!",
-      }
+      },
+      "deployment" // error-mapping context: deployment-specific friendly fallback
     );
 
     if (flowStatus !== "success" || !flowResult?.receipt) {
@@ -322,7 +345,8 @@ export default function CreatePass() {
             </label>
             <input id="image" className="form-input" type="file" accept="image/*" onChange={handleImage} />
             <p className="field-hint">
-              Compressed to max 512px in your browser before deployment. Smaller image = cheaper deploy.
+              Compressed to max {MAX_IMAGE_DIMENSION}px in your browser before deployment. Smaller image = cheaper
+              deploy (images are stored on-chain).
             </p>
             {errors.image && <p className="field-error">{errors.image}</p>}
           </div>
@@ -335,7 +359,13 @@ export default function CreatePass() {
             </div>
           )}
 
-          <TransactionStatus status={status} message={message} txHash={result?.txHash} explorerUrl={txExplorerUrl}>
+          <TransactionStatus
+            status={status}
+            message={message}
+            txHash={result?.txHash}
+            explorerUrl={txExplorerUrl}
+            rawError={rawError}
+          >
             {status === "error" && (
               <button type="button" className="btn btn--secondary btn--sm" onClick={reset}>
                 Try Again

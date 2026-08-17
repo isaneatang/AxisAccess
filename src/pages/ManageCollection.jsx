@@ -394,15 +394,21 @@ export default function ManageCollection() {
         </div>
       </div>
 
-      <TransactionStatus status={mintFlow.status} message={mintFlow.message} txHash={mintFlow.result?.txHash} explorerUrl={txExplorerUrl}>
+      <TransactionStatus
+        status={mintFlow.status}
+        message={mintFlow.message}
+        txHash={mintFlow.result?.txHash}
+        explorerUrl={txExplorerUrl}
+        rawError={mintFlow.rawError}
+      >
         {mintFlow.status === "error" && (
           <button type="button" className="btn btn--secondary btn--sm" onClick={mintFlow.reset}>
             Try Again
           </button>
         )}
       </TransactionStatus>
-      <TransactionStatus status={withdrawFlow.status} message={withdrawFlow.message} txHash={withdrawFlow.result?.txHash} explorerUrl={txExplorerUrl} />
-      <TransactionStatus status={metaFlow.status} message={metaFlow.message} txHash={metaFlow.result?.txHash} explorerUrl={txExplorerUrl} />
+      <TransactionStatus status={withdrawFlow.status} message={withdrawFlow.message} txHash={withdrawFlow.result?.txHash} explorerUrl={txExplorerUrl} rawError={withdrawFlow.rawError} />
+      <TransactionStatus status={metaFlow.status} message={metaFlow.message} txHash={metaFlow.result?.txHash} explorerUrl={txExplorerUrl} rawError={metaFlow.rawError} />
 
       {/* Gift modal */}
       <Modal open={giftOpen} onClose={() => setGiftOpen(false)} title="Gift a Pass">
@@ -424,7 +430,7 @@ export default function ManageCollection() {
           />
           {giftError && <p className="field-error">{giftError}</p>}
         </div>
-        <TransactionStatus status={giftFlow.status} message={giftFlow.message} txHash={giftFlow.result?.txHash} explorerUrl={txExplorerUrl} />
+        <TransactionStatus status={giftFlow.status} message={giftFlow.message} txHash={giftFlow.result?.txHash} explorerUrl={txExplorerUrl} rawError={giftFlow.rawError} />
         <div className="modal__actions">
           <button type="button" className="btn btn--secondary" onClick={() => setGiftOpen(false)}>
             Cancel

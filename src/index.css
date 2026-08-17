@@ -638,10 +638,65 @@ code {
 
 .tx-status__body {
   flex: 1;
+  /* Critical for long errors: without this, a flex item refuses to shrink
+     below its content width, so an unbreakable RPC string (e.g. deploy
+     bytecode in "Request Arguments: data: 0x...") would widen the whole
+     row and blow the page out horizontally on mobile. */
+  min-width: 0;
 }
 
 .tx-status__message {
   font-weight: 600;
+  /* Even the friendly message should never be able to widen the layout.
+     overflow-wrap handles arbitrary long tokens (hex, URLs, base64). */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Collapsible "Technical details" accordion for the raw RPC error. The raw
+   error can be enormous (the full deploy bytecode), so it gets its own
+   fully-constrained scroll container: it may NEVER influence page width. */
+.tx-status__details {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  max-width: 100%;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.tx-status__details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-dim);
+  user-select: none;
+}
+
+.tx-status__details summary:hover {
+  color: var(--text);
+}
+
+.tx-status__details-pre {
+  margin-top: 8px;
+  max-width: 100%;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--text-dim);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  /* The long unbroken hex/bytecode string must wrap AND scroll, never
+     expand the page. pre-wrap + anywhere handles wrapping; overflow-x is
+     the belt for any remaining long token; max-height gives vertical
+     scrolling instead of a 10,000px-tall page. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  overflow-x: auto;
+  max-height: 180px;
+  overflow-y: auto;
 }
 
 .tx-status--success {

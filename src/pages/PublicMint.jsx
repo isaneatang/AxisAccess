@@ -43,7 +43,7 @@ export default function PublicMint() {
   const [buyerOwns, setBuyerOwns] = useState(false);
   const [buyerBalance, setBuyerBalance] = useState(null); // bigint
   const [showWalletModal, setShowWalletModal] = useState(false);
-  const { status, message, result, run, reset } = useTxFlow();
+  const { status, message, result, rawError, run, reset } = useTxFlow();
 
   const validContract = isValidAddress(contractParam);
   const wrongNetwork = chainParam && Number(chainParam) !== ACTIVE_CHAIN.chainId;
@@ -285,7 +285,7 @@ export default function PublicMint() {
             </a>
           </p>
 
-          <TransactionStatus status={status} message={message} txHash={result?.txHash} explorerUrl={txExplorerUrl}>
+          <TransactionStatus status={status} message={message} txHash={result?.txHash} explorerUrl={txExplorerUrl} rawError={rawError}>
             {status === "error" && (
               <button type="button" className="btn btn--secondary btn--sm" onClick={reset}>
                 Try Again

@@ -236,8 +236,8 @@ export default function MyPasses() {
         </div>
       )}
 
-      <TransactionStatus status={sendFlow.status} message={sendFlow.message} txHash={sendFlow.result?.txHash} explorerUrl={txExplorerUrl} />
-      <TransactionStatus status={burnFlow.status} message={burnFlow.message} txHash={burnFlow.result?.txHash} explorerUrl={txExplorerUrl} />
+      <TransactionStatus status={sendFlow.status} message={sendFlow.message} txHash={sendFlow.result?.txHash} explorerUrl={txExplorerUrl} rawError={sendFlow.rawError} />
+      <TransactionStatus status={burnFlow.status} message={burnFlow.message} txHash={burnFlow.result?.txHash} explorerUrl={txExplorerUrl} rawError={burnFlow.rawError} />
 
       {/* Send modal */}
       <Modal open={!!sendTarget} onClose={() => setSendTarget(null)} title="Send Pass">
@@ -264,7 +264,7 @@ export default function MyPasses() {
           />
           {sendError && <p className="field-error">{sendError}</p>}
         </div>
-        <TransactionStatus status={sendFlow.status} message={sendFlow.message} txHash={sendFlow.result?.txHash} explorerUrl={txExplorerUrl} />
+        <TransactionStatus status={sendFlow.status} message={sendFlow.message} txHash={sendFlow.result?.txHash} explorerUrl={txExplorerUrl} rawError={sendFlow.rawError} />
         <div className="modal__actions">
           <button type="button" className="btn btn--secondary" onClick={() => setSendTarget(null)}>
             Cancel
@@ -287,7 +287,7 @@ export default function MyPasses() {
           </p>
         </div>
         {burnError && <p className="field-error">{burnError}</p>}
-        <TransactionStatus status={burnFlow.status} message={burnFlow.message} txHash={burnFlow.result?.txHash} explorerUrl={txExplorerUrl} />
+        <TransactionStatus status={burnFlow.status} message={burnFlow.message} txHash={burnFlow.result?.txHash} explorerUrl={txExplorerUrl} rawError={burnFlow.rawError} />
         <div className="modal__actions">
           <button type="button" className="btn btn--secondary" onClick={() => setBurnTarget(null)}>
             Cancel

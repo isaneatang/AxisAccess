@@ -91,6 +91,12 @@ export function WalletProvider({ children }) {
    * shows its own approval UI. On failure we surface a friendly message and
    * the manual add-chain hint.
    *
+   * Most mobile wallets do not know chain 968 ("No network" / "Can't
+   * connect" come from exactly this), so when the switch fails because the
+   * chain is NOT CONFIGURED (EIP-1193 code 4902), we first try to ADD it
+   * via wallet_addEthereumChain, then retry the switch once. If that also
+   * fails, the caller shows the manual add-chain instructions.
+   *
    * @returns {Promise<{ok: boolean, cancelled?: boolean}>}
    */
   const switchToActiveNetwork = useCallback(async () => {
@@ -100,13 +106,28 @@ export function WalletProvider({ children }) {
       await switchNetwork(ACTIVE_CHAIN.viemChain);
       return { ok: true };
     } catch (err) {
+      const chainMissing =
+        err?.code === 4902 || /chain.*not.*(added|configur)/i.test(err?.message || "");
+      if (chainMissing && walletClient) {
+        try {
+          // wallet_addEthereumChain with the EIP-3085 params derived from
+          // the viem chain object (chainId, name, BOT/18, rpc, explorer).
+          await walletClient.addChain({ chain: ACTIVE_CHAIN.viemChain });
+          await switchNetwork(ACTIVE_CHAIN.viemChain);
+          return { ok: true };
+        } catch (addErr) {
+          const friendly = friendlyErrorMessage(addErr, "network");
+          setError(friendly.message);
+          return { ok: false, cancelled: addErr?.code === 4001 };
+        }
+      }
       const friendly = friendlyErrorMessage(err, "network");
       setError(friendly.message);
       return { ok: false, cancelled: err?.code === 4001 };
     } finally {
       setSwitching(false);
     }
-  }, [switchNetwork]);
+  }, [switchNetwork, walletClient]);
 
   const clearError = useCallback(() => setError(null), []);
 

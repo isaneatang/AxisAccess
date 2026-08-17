@@ -93,6 +93,20 @@ const RPC_PATTERNS = [
 ];
 
 /**
+ * Gas estimation failures. The wallet could not simulate the transaction
+ * (chain not configured in the wallet, RPC too slow for a large deploy,
+ * payload over the RPC's simulation limit). This is a connection/config
+ * problem, not a contract bug - say so in plain words.
+ */
+const GAS_ESTIMATION_PATTERNS = [
+  /unable to estimate/i,
+  /estimate gas/i,
+  /gas estimation/i,
+  /gas required exceeds/i,
+  /gas limit.*exceed/i,
+];
+
+/**
  * Turn any thrown thing into { message, faucet } for the UI.
  *
  * @param {unknown} err     The thrown error (viem/wagmi errors carry .code/.shortMessage).
@@ -118,6 +132,17 @@ export function friendlyErrorMessage(err, context = "transaction") {
   if (code === 4902 || /chain.*not.*(added|configur)/i.test(haystack)) {
     return {
       message: "BOT Chain Testnet is not configured in this wallet. Add it to continue.",
+      faucet: false,
+    };
+  }
+
+  // The wallet could not estimate gas for the transaction (typical on
+  // mobile wallets for chain 968, especially large deploys).
+  if (GAS_ESTIMATION_PATTERNS.some((re) => re.test(haystack))) {
+    return {
+      message:
+        "Transaction failed. The wallet could not estimate the gas required for this transaction. " +
+        "Please check that your wallet is connected to BOT Chain and try again.",
       faucet: false,
     };
   }

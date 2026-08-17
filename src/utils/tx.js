@@ -18,14 +18,17 @@
  */
 
 import { useCallback, useRef, useState } from "react";
+import { friendlyErrorMessage } from "./errors";
 
 /**
- * Hook: returns { status, message, result, run, reset }.
+ * Hook: returns { status, message, result, rawError, run, reset }.
  *
  * @returns
  *   status   one of the states above
- *   message  friendly status text for the UI
+ *   message  friendly status text for the UI (NEVER a raw RPC error)
  *   result   whatever the tx resolved with (txHash, tokenId, ...)
+ *   rawError the original thrown error, kept for the technical-details
+ *            accordion in TransactionStatus - NOT for the visible copy
  *   run      async fn: wraps your tx, drives the state machine
  *   reset    back to idle
  */
@@ -33,6 +36,7 @@ export function useTxFlow() {
   const [status, setStatus] = useState("idle");
   const [message, setMessage] = useState("");
   const [result, setResult] = useState(null);
+  const [rawError, setRawError] = useState(null);
   const active = useRef(false);
 
   /**
@@ -43,12 +47,15 @@ export function useTxFlow() {
    * @param {Function} broadcast  async () => txHash   signs + broadcasts
    * @param {Function} confirm    async (txHash) => receipt   waits for mining
    * @param {object}   steps      { preparing, waiting, pending, confirming, success }
+   * @param {string}   [context]  "deployment" | "transaction" | "connect" | "network"
+   *                              (tweaks the friendly error fallback wording)
    * @returns {Promise<object|null>} { status, result } or null if skipped
    */
-  const run = useCallback(async (broadcast, confirm, steps = {}) => {
+  const run = useCallback(async (broadcast, confirm, steps = {}, context = "transaction") => {
     if (active.current) return null; // duplicate submission guard
     active.current = true;
     setResult(null);
+    setRawError(null);
     setStatus("preparing");
     setMessage(steps.preparing || "Preparing transaction...");
     try {
@@ -66,7 +73,12 @@ export function useTxFlow() {
       return { status: "success", result: { txHash, receipt } };
     } catch (err) {
       setStatus("error");
-      setMessage(err?.message || "Transaction failed.");
+      // Friendly message only. The raw error (which for a failed deploy
+      // contains the ENTIRE bytecode as "Request Arguments: ... data:
+      // 0x6080...") goes to rawError and lives in the collapsible
+      // technical-details block, never in the visible copy.
+      setRawError(err);
+      setMessage(steps.error || friendlyErrorMessage(err, context).message);
       return { status: "error", error: err };
     } finally {
       active.current = false;
@@ -78,7 +90,8 @@ export function useTxFlow() {
     setStatus("idle");
     setMessage("");
     setResult(null);
+    setRawError(null);
   }, []);
 
-  return { status, message, result, run, reset };
+  return { status, message, result, rawError, run, reset };
 }
