@@ -255,4 +255,4 @@ Design notes for mobile reliability:
 
 ---
 
-Footer: Axis by Equixote Isane
+Footer: Axis by Last
