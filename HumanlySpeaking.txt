@@ -1,0 +1,15 @@
+hello friend or friends. My name is Isane, the idea mind behind Axis. I wrote this as a comment on what Axis is about.
+Axis is part 1 of 3 Projects.
+
+
+ Companies or saas services usually utilise visa card or any other debit card gateways to request payment from their customers. Some users consider crypto payment better as we are never too sure were our data end up, i dont even trust the browsers. Sometimes browsers usually save your credit card details. well thats that...
+ 
+With axis, verified projects or anything or anyone can hand out access to their product by minting out access. For example, you area an AI company, if you want to allow access to individuals to use your premium ai features without them signing up or using payment gateways that arent 100 percent trusted, this is for you. all you need to do is mint/deploy the access, its rarity, and its price. share the link/qrcode to the customers, they pay mint with BOT token and volla. You dont know who bought thw product, and the buyer feels safe behind blockchain technology. after they mint the access at the specific price, you can withdraw the token to your wallet. they have proof of access in their wallet. And you can also use it to create nfts and sell and other media, but i wont advise doing that currently bevause it takes a little much gas fee than normal, in the future i will perfect all that.
+
+that is what this project is all about. rememeber i said this was part 1 of 3 projects. the second project is an access market place where users can search access to services, either by indexing or by contract address. I am still implementing medecines against spammers. 
+the 3rd project is an SDK that companies add to their website. ofcourse the SDK is opensource and it will be used to verify the proof of access of a specific wallet and then inform the service that a specific wallet has permission to access the service because of their minted access. the website doesnt even have to support wallet connect or any web3 bla bla to use this sdk. infact this is for non dapps.
+
+
+
+
+thank you smiley face, stressed face. i hope the english is okay
