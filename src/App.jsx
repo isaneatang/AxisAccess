@@ -42,7 +42,7 @@ export default function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
-          <footer className="app__footer">Axis by Equixote Isane</footer>
+          <footer className="app__footer">Axis by Last</footer>
         </div>
       </WalletProvider>
     </BrowserRouter>
