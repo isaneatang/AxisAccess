@@ -79,10 +79,10 @@ export const BOT_CHAINS = {
 };
 
 /**
- * THE switch. Default: BOT Chain Testnet. This single value controls every
+ * THE switch. Default: BOT Chain Mainnet. This single value controls every
  * RPC call, every network-switch request and every explorer link in the app.
  */
-export const ACTIVE_NETWORK_KEY = "botTestnet";
+export const ACTIVE_NETWORK_KEY = "botMainnet";
 
 /** Convenience alias for the active chain config object. */
 export const ACTIVE_CHAIN = BOT_CHAINS[ACTIVE_NETWORK_KEY];
