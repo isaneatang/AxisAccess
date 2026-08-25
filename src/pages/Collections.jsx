@@ -19,7 +19,7 @@ import { getCollections, saveCollection, getCollection } from "../utils/storage"
 import { readCollection } from "../blockchain/contract";
 import { normalizeAddress } from "../utils/validation";
 import { friendlyErrorMessage } from "../utils/errors";
-import { formatBOT } from "../utils/formatting";
+import { formatUSDT } from "../utils/formatting";
 import { buildMintUrl } from "../config/constants";
 import { ACTIVE_CHAIN } from "../config/chains";
 import CollectionCard from "../components/CollectionCard";
@@ -59,10 +59,10 @@ export default function Collections() {
               ...c,
               ...data,
               image: c.image || data.metadata?.image,
-              priceLabel: formatBOT(data.mintPrice),
+              priceLabel: `${formatUSDT(data.mintPrice)} USDT`,
             };
           } catch {
-            return { ...c, priceLabel: c.mintPriceBOT ? `${c.mintPriceBOT} BOT` : "?" };
+            return { ...c, priceLabel: c.mintPriceUSDT ? `${c.mintPriceUSDT} USDT` : c.mintPriceBOT ? `${c.mintPriceBOT} BOT` : "?" };
           }
         })
       );

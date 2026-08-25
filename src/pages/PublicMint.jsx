@@ -19,12 +19,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useWallet } from "../context/WalletContext";
-import { readCollection, readBalanceOf, readBalance, mintPass, confirmTransaction, extractMintedTokenId } from "../blockchain/contract";
+import { readCollection, readBalanceOf, readUsdtBalance, mintPass, confirmTransaction, extractMintedTokenId } from "../blockchain/contract";
 import { saveCollection } from "../utils/storage";
 import { isValidAddress } from "../utils/validation";
 import { friendlyErrorMessage } from "../utils/errors";
 import { useTxFlow } from "../utils/tx";
-import { formatBOT, shortenAddress, txExplorerUrl, addressExplorerUrl } from "../utils/formatting";
+import { formatUSDT, shortenAddress, txExplorerUrl, addressExplorerUrl } from "../utils/formatting";
 import { buildMintUrl, FAUCET_URL } from "../config/constants";
 import { ACTIVE_CHAIN } from "../config/chains";
 import TransactionStatus from "../components/TransactionStatus";
@@ -76,7 +76,7 @@ export default function PublicMint() {
       if (isConnected) {
         const owns = await readBalanceOf(live.address, address);
         setBuyerOwns(owns > 0n);
-        setBuyerBalance(await readBalance(address));
+        setBuyerBalance(await readUsdtBalance(address));
       }
     } catch (err) {
       setLoadError(friendlyErrorMessage(err, "transaction").message);
@@ -95,7 +95,7 @@ export default function PublicMint() {
       readBalanceOf(collection.address, address)
         .then((owns) => setBuyerOwns(owns > 0n))
         .catch(() => {});
-      readBalance(address)
+      readUsdtBalance(address)
         .then(setBuyerBalance)
         .catch(() => {});
     } else {
@@ -123,7 +123,7 @@ export default function PublicMint() {
     }
 
     const { status: flowStatus, error } = await run(
-      () => mintPass(collection.address, address, formatBOT(collection.mintPrice), walletClient),
+      () => mintPass(collection.address, address, collection.mintPrice, walletClient),
       confirmTransaction,
       {
         preparing: "Preparing your mint...",
@@ -260,7 +260,7 @@ export default function PublicMint() {
           <div className="mint-card__stats">
             <div className="stat">
               <span className="stat__label">Price</span>
-              <span className="stat__value">{formatBOT(collection.mintPrice)} BOT</span>
+              <span className="stat__value">{formatUSDT(collection.mintPrice)} USDT</span>
             </div>
             <div className="stat">
               <span className="stat__label">Minted</span>
@@ -315,8 +315,10 @@ export default function PublicMint() {
           ) : needsFaucet ? (
             <div className="tx-status tx-status--error">
               <div className="tx-status__body">
-                <strong>Not enough BOT testnet funds (need {formatBOT(collection.mintPrice)} BOT).</strong>
-                <p className="field-hint">Grab free testnet BOT from the official faucet, then come back.</p>
+                <strong>Not enough USDT (need {formatUSDT(collection.mintPrice)} USDT).</strong>
+                <p className="field-hint">
+                  Get USDT on B DEX or bridge it in. A little native BOT for gas is still required.
+                </p>
                 <a className="btn btn--secondary btn--sm" href={FAUCET_URL} target="_blank" rel="noreferrer">
                   Open faucet
                 </a>

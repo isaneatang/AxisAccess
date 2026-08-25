@@ -149,7 +149,8 @@ export function friendlyErrorMessage(err, context = "transaction") {
 
   if (INSUFFICIENT_FUNDS_PATTERNS.some((re) => re.test(haystack))) {
     return {
-      message: "Insufficient BOT testnet funds for this transaction.",
+      message:
+        "Insufficient funds for this transaction. Mints are paid in USDT and gas is paid in native BOT - check both balances.",
       faucet: true,
     };
   }

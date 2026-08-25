@@ -1,23 +1,23 @@
 /**
  * src/utils/formatting.js
  * -----------------------
- * Display helpers: BOT amounts, shortened addresses, explorer URLs.
- * All blockchain values arrive as bigint wei and are formatted here with
- * viem's formatEther, NEVER with Number()/toFixed on raw wei (that is how
- * decimal precision goes to die).
+ * Display helpers: USDT amounts, shortened addresses, explorer URLs.
+ * All blockchain values arrive as bigint base units and are formatted here
+ * with viem's formatUnits, NEVER with Number()/toFixed on raw amounts
+ * (that is how decimal precision goes to die).
  */
 
-import { formatEther } from "viem";
-import { ACTIVE_CHAIN } from "../config/chains";
+import { formatUnits } from "viem";
+import { ACTIVE_CHAIN, USDT_DECIMALS } from "../config/chains";
 
 /**
- * Format a bigint wei amount as a readable BOT string.
- * Strips trailing zeros ("0.500000" -> "0.5") and keeps 4 decimals max,
+ * Format a USDT amount in base units (6 decimals) as a readable string.
+ * Strips trailing zeros ("5.000000" -> "5") and keeps 4 decimals max,
  * enough for a dashboard and easy on the eyes.
  */
-export function formatBOT(wei) {
-  if (wei === null || wei === undefined) return "0";
-  const formatted = formatEther(wei, "wei");
+export function formatUSDT(amount) {
+  if (amount === null || amount === undefined) return "0";
+  const formatted = formatUnits(amount, USDT_DECIMALS);
   const parts = formatted.split(".");
   if (parts.length === 1) return parts[0];
   const decimals = parts[1].replace(/0+$/, "").slice(0, 4);

@@ -124,7 +124,7 @@ export default function CreatePass() {
       image: form.image,
       accessTier: form.accessTier,
       maxSupply: form.supply,
-      mintPriceBOT: form.price,
+      mintPriceUSDT: form.price,
     });
 
     // The metadata URI is a constructor argument: every kilobyte of it is
@@ -148,7 +148,7 @@ export default function CreatePass() {
             productName: form.productName,
             accessTier: form.accessTier,
             maxSupply: form.supply,
-            mintPriceBOT: form.price,
+            mintPriceUSDT: form.price,
             metadataURI,
           },
           walletClient
@@ -188,7 +188,7 @@ export default function CreatePass() {
       createdAt: Date.now(),
       description: form.description,
       image: form.image,
-      mintPriceBOT: form.price,
+      mintPriceUSDT: form.price,
       maxSupply: form.supply,
     });
   };
@@ -315,7 +315,7 @@ export default function CreatePass() {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label" htmlFor="price">
-                Price (BOT)
+                Price (USDT)
               </label>
               <input
                 id="price"
@@ -411,7 +411,7 @@ export default function CreatePass() {
               <h4>{form.productName ? `${form.productName} Pass` : "Your Pass Name"}</h4>
               <p className="preview-card__desc">{form.description || "Your description will appear here."}</p>
               <div className="preview-card__stats">
-                <span>Price: <strong>{form.price ? `${form.price} BOT` : "0 BOT"}</strong></span>
+                <span>Price: <strong>{form.price ? `${form.price} USDT` : "0 USDT"}</strong></span>
                 <span>Supply: <strong>{form.supply || "0"}</strong></span>
                 <span>Symbol: <strong>{symbol}</strong></span>
               </div>

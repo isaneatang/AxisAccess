@@ -50,15 +50,16 @@ export function validateAccessTier(value, tiers) {
 }
 
 /**
- * Price: a valid non-negative BOT amount. Accepts "0", "0.5", "1.25" etc.
- * Rejects negative values, NaN, and absurd precision (> 18 decimals).
+ * Price: a valid non-negative USDT amount. Accepts "0", "0.5", "1.25" etc.
+ * Rejects negative values, NaN, and absurd precision (> 6 decimals, the
+ * USDT limit - parseUnits would throw on more).
  */
 export function validatePrice(value) {
   const v = String(value ?? "").trim();
   if (v === "") return "Price is required.";
-  if (!/^\d+(\.\d+)?$/.test(v)) return "Price must be a valid number of BOT.";
+  if (!/^\d+(\.\d+)?$/.test(v)) return "Price must be a valid number of USDT.";
   const decimals = v.split(".")[1] || "";
-  if (decimals.length > 18) return "Price has too many decimal places.";
+  if (decimals.length > 6) return "USDT supports at most 6 decimal places.";
   return null;
 }
 

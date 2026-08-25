@@ -17,10 +17,46 @@
  * clients.js, so they work before any wallet connects.
  */
 
-import { parseEther, parseEventLogs, zeroAddress, encodeDeployData } from "viem";
+import { parseUnits, parseEventLogs, zeroAddress, encodeDeployData } from "viem";
 import { accessPassAbi, accessPassBytecode } from "./artifact";
 import { getPublicClient } from "./clients";
-import { ACTIVE_CHAIN } from "../config/chains";
+import { ACTIVE_CHAIN, USDT_DECIMALS } from "../config/chains";
+
+/** Minimal ERC-20 surface used for USDT payments. */
+export const erc20Abi = [
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "allowance",
+    stateMutability: "view",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "approve",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ type: "bool" }],
+  },
+];
+
+/** Parse a decimal price string ("5", "0.25") into USDT base units (6 dec). */
+export function parseUsdt(priceString) {
+  return parseUnits(String(priceString), USDT_DECIMALS);
+}
 
 /* ------------------------------------------------------------------------ */
 /* Deployment                                                               */
@@ -49,7 +85,7 @@ import { ACTIVE_CHAIN } from "../config/chains";
  * @param {string} params.productName   Product display name
  * @param {string} params.accessTier    Basic | Pro | Premium | Enterprise
  * @param {number|string} params.maxSupply
- * @param {string} params.mintPriceBOT  Price as a decimal string, e.g. "0.5"
+ * @param {string} params.mintPriceUSDT Price as a decimal string, e.g. "5" or "0.5"
  * @param {string} params.metadataURI   data: URI with the full metadata
  * @param {object} walletClient         viem wallet client (from context)
  * @returns {Promise<string>} txHash (use confirmTransaction to get the
@@ -62,8 +98,10 @@ export async function deployCollection(params, walletClient) {
     params.productName,
     params.accessTier,
     BigInt(params.maxSupply),
-    // parseEther, never Number(). Decimal precision is precious.
-    parseEther(String(params.mintPriceBOT)),
+    // parseUnits with 6 decimals (USDT), never Number(). Precision matters.
+    parseUsdt(params.mintPriceUSDT),
+    // Mints are paid in bridged USDT; the token address is baked in here.
+    ACTIVE_CHAIN.usdtAddress,
     params.metadataURI,
   ];
 
@@ -131,7 +169,7 @@ export async function readCollection(address) {
   const read = (functionName, args = []) =>
     publicClient.readContract({ address, abi: accessPassAbi, functionName, args });
 
-  const [name, symbol, productName, accessTier, maxSupply, totalMinted, mintPrice, owner, metadataUri] =
+  const [name, symbol, productName, accessTier, maxSupply, totalMinted, mintPrice, paymentToken, owner, metadataUri] =
     await Promise.all([
       read("name"),
       read("symbol"),
@@ -140,6 +178,7 @@ export async function readCollection(address) {
       read("maxSupply"),
       read("totalMinted"),
       read("mintPrice"),
+      read("paymentToken"),
       read("owner"),
       read("metadataURI"),
     ]);
@@ -154,6 +193,7 @@ export async function readCollection(address) {
     maxSupply,
     totalMinted,
     mintPrice,
+    paymentToken,
     owner,
     metadataUri,
     metadata: decodeMetadata(metadataUri),
@@ -185,7 +225,30 @@ export async function readCollectionMetadata(address) {
   return decodeMetadata(uri);
 }
 
-/** BOT balance of an account (bigint wei). */
+/** USDT balance of an account (bigint, 6-decimal base units). */
+export async function readUsdtBalance(address) {
+  return getPublicClient().readContract({
+    address: ACTIVE_CHAIN.usdtAddress,
+    abi: erc20Abi,
+    functionName: "balanceOf",
+    args: [address],
+  });
+}
+
+/**
+ * How much of `spender` the `owner` wallet has already approved in USDT.
+ * Used to skip the approve tx when the allowance already covers the price.
+ */
+export async function readUsdtAllowance(owner, spender) {
+  return getPublicClient().readContract({
+    address: ACTIVE_CHAIN.usdtAddress,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: [owner, spender],
+  });
+}
+
+/** Native BOT balance of an account (bigint wei). Still needed for gas. */
 export async function readBalance(address) {
   return getPublicClient().getBalance({ address });
 }
@@ -278,16 +341,44 @@ export function extractMintedTokenId(receipt) {
 }
 
 /**
- * Public paid mint. `to` pays mintPrice (sent as tx value).
- * @returns {Promise<string>} txHash
+ * Public paid mint, paid in USDT.
+ *
+ * ERC-20 payments need the collection contract approved to pull the price
+ * from the buyer's wallet, so this may fire TWO transactions:
+ *   1. USDT.approve(collection, price)  - only when allowance is short
+ *   2. AccessPass.mint(to)              - pulls the exact price
+ *
+ * The returned hash is always the MINT tx (step 2), so confirmTransaction()
+ * and extractMintedTokenId() work unchanged for callers.
+ *
+ * @param {string} collectionAddress collection contract
+ * @param {string} to pass recipient
+ * @param {bigint} mintPriceWei price in USDT base units (collection.mintPrice)
+ * @returns {Promise<string>} txHash of the mint transaction
  */
-export function mintPass(collectionAddress, to, mintPriceBOT, walletClient) {
+export async function mintPass(collectionAddress, to, mintPriceWei, walletClient) {
+  const payer = walletClient.account.address;
+
+  // Approve only if needed: an extra signature per mint is hostile UX and
+  // costs gas. Allowances are cumulative on most tokens, so checking first
+  // means repeat buyers only ever sign the mint itself.
+  const allowance = await readUsdtAllowance(payer, collectionAddress);
+  if (allowance < mintPriceWei) {
+    const approveHash = await walletClient.writeContract({
+      address: ACTIVE_CHAIN.usdtAddress,
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [collectionAddress, mintPriceWei],
+    });
+    // The mint would fail if broadcast before the approval is mined.
+    await getPublicClient().waitForTransactionReceipt({ hash: approveHash });
+  }
+
   return broadcast(
     {
       address: collectionAddress,
       functionName: "mint",
       args: [to],
-      value: parseEther(String(mintPriceBOT)),
     },
     walletClient
   );
@@ -334,7 +425,7 @@ export function transferPass(collectionAddress, to, tokenId, walletClient) {
 }
 
 /**
- * Withdraw the collection's BOT balance to the owner.
+ * Withdraw the collection's USDT proceeds to the owner.
  * @returns {Promise<string>} txHash
  */
 export function withdrawFunds(collectionAddress, walletClient) {
@@ -389,7 +480,7 @@ export function decodeMetadata(uri) {
  * Build the on-chain metadata data URI from parts. UTF-8 safe base64.
  * The NFT must NOT contain secrets; it only proves entitlement.
  */
-export function buildMetadataURI({ name, description, image, accessTier, maxSupply, mintPriceBOT }) {
+export function buildMetadataURI({ name, description, image, accessTier, maxSupply, mintPriceUSDT }) {
   const metadata = {
     name,
     description,
@@ -397,7 +488,7 @@ export function buildMetadataURI({ name, description, image, accessTier, maxSupp
     attributes: [
       { trait_type: "Access Tier", value: accessTier },
       { trait_type: "Maximum Supply", value: String(maxSupply) },
-      { trait_type: "Price", value: `${mintPriceBOT} BOT` },
+      { trait_type: "Price", value: `${mintPriceUSDT} USDT` },
     ],
   };
   const json = JSON.stringify(metadata);

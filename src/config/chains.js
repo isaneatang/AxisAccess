@@ -25,12 +25,21 @@ import { defineChain } from "viem";
  * (Reown uses viem networks for EVM chains), so defining it here once keeps
  * every layer in sync.
  */
+/**
+ * USDT payment token (bridged via the official BOT Bridge). Prices are
+ * denominated in USDT so creators are insulated from BOT price swings.
+ * Both deployments carry 6 decimals (verified on-chain, not assumed).
+ * Sources: dev-docs.botchain.ai/docs/Bridge/contract-addresses/
+ */
+export const USDT_DECIMALS = 6;
+
 export const BOT_CHAINS = {
   botTestnet: {
     key: "botTestnet",
     name: "BOT Chain Testnet",
     chainId: 968,
     nativeCurrency: { name: "BOT", symbol: "BOT", decimals: 18 },
+    usdtAddress: "0x75edC9335175Fc0552D51D48439F229c10420fe3",
     rpcUrl: "https://rpc.bohr.life",
     explorerUrl: "https://scan.bohr.life",
     faucetUrl: "https://faucet.bohr.life/en/basic",
@@ -51,6 +60,7 @@ export const BOT_CHAINS = {
     name: "BOT Chain Mainnet",
     chainId: 677,
     nativeCurrency: { name: "BOT", symbol: "BOT", decimals: 18 },
+    usdtAddress: "0xaBabc7Ddc03e501d190C676BF3d92ef0e6e87a3C",
     rpcUrl: "https://rpc.botchain.ai",
     explorerUrl: "https://scan.botchain.ai",
     faucetUrl: null, // No faucet on mainnet. Real money. Be careful out there.
@@ -72,7 +82,7 @@ export const BOT_CHAINS = {
  * THE switch. Default: BOT Chain Testnet. This single value controls every
  * RPC call, every network-switch request and every explorer link in the app.
  */
-export const ACTIVE_NETWORK_KEY = "botMainnet";
+export const ACTIVE_NETWORK_KEY = "botTestnet";
 
 /** Convenience alias for the active chain config object. */
 export const ACTIVE_CHAIN = BOT_CHAINS[ACTIVE_NETWORK_KEY];

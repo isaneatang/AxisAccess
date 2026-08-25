@@ -25,7 +25,7 @@ import { useWallet } from "../context/WalletContext";
 import {
   readCollection,
   readCollectionOwner,
-  readBalance,
+  readUsdtBalance,
   mintPass,
   giftMintPass,
   withdrawFunds,
@@ -36,7 +36,7 @@ import { saveCollection } from "../utils/storage";
 import { friendlyErrorMessage } from "../utils/errors";
 import { useTxFlow } from "../utils/tx";
 import { validateRecipient, isValidAddress } from "../utils/validation";
-import { formatBOT, txExplorerUrl, addressExplorerUrl, shortenAddress } from "../utils/formatting";
+import { formatUSDT, txExplorerUrl, addressExplorerUrl, shortenAddress } from "../utils/formatting";
 import { buildMintUrl } from "../config/constants";
 import { ACTIVE_CHAIN } from "../config/chains";
 import TransactionStatus from "../components/TransactionStatus";
@@ -89,7 +89,8 @@ export default function ManageCollection() {
       const data = await readCollection(addressParam);
       setCollection(data);
       setOwner(data.owner);
-      setBalance(await readBalance(addressParam));
+      // Proceeds are held in USDT, so show the token balance, not native.
+      setBalance(await readUsdtBalance(addressParam));
       // Keep the local registry fresh so My Passes/Collections find it.
       saveCollection({
         address: data.address,
@@ -118,7 +119,7 @@ export default function ManageCollection() {
       readCollectionOwner(addressParam)
         .then(setOwner)
         .catch(() => {});
-      readBalance(addressParam)
+      readUsdtBalance(addressParam)
         .then(setBalance)
         .catch(() => {});
     }
@@ -129,7 +130,7 @@ export default function ManageCollection() {
   const handleMintToSelf = async () => {
     if (!collection || !walletClient || !address) return;
     const { status, error } = await mintFlow.run(
-      () => mintPass(collection.address, address, formatBOT(collection.mintPrice), walletClient),
+      () => mintPass(collection.address, address, collection.mintPrice, walletClient),
       confirmTransaction,
       {
         preparing: "Preparing mint...",
@@ -308,7 +309,7 @@ export default function ManageCollection() {
             </div>
             <div>
               <dt>Price</dt>
-              <dd>{formatBOT(collection.mintPrice)} BOT</dd>
+              <dd>{formatUSDT(collection.mintPrice)} USDT</dd>
             </div>
             <div>
               <dt>Max Supply</dt>
@@ -332,7 +333,7 @@ export default function ManageCollection() {
             </div>
             <div>
               <dt>Balance</dt>
-              <dd>{balance !== null ? `${formatBOT(balance)} BOT` : "..."}</dd>
+              <dd>{balance !== null ? `${formatUSDT(balance)} USDT` : "..."}</dd>
             </div>
           </dl>
         </div>
@@ -371,7 +372,7 @@ export default function ManageCollection() {
                   onClick={handleWithdraw}
                   disabled={!balance || balance <= 0n || txBusy(withdrawFlow)}
                 >
-                  Withdraw ({balance !== null ? `${formatBOT(balance)} BOT` : "..."})
+                  Withdraw ({balance !== null ? `${formatUSDT(balance)} USDT` : "..."})
                 </button>
               </div>
               {!isOnActiveNetwork && (
