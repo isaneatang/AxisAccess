@@ -70,7 +70,7 @@ export function parseUsdt(priceString) {
  * By default viem asks the WALLET to estimate gas and fees
  * (eth_estimateGas / eth_maxPriorityFeePerGas over the Reown provider).
  * Mobile wallets frequently cannot do this for a large deploy on a custom
- * testnet chain: they do not have chain 968 configured, or their RPC for it
+ * chain: they do not have chain 677 configured, or their RPC for it
  * chokes on a big constructor payload ("Unable to estimate gas fee",
  * "No network", "Can't connect").
  *
@@ -126,7 +126,7 @@ export async function deployCollection(params, walletClient) {
   } catch {
     // Estimation failed (transient RPC hiccup, or a payload at the edge of
     // what the RPC will simulate). Fall back to a size-derived cap: base
-    // constructor cost + calldata cost. gasPrice is ~free on this testnet,
+     // constructor cost + calldata cost. gasPrice is ~free on this chain,
     // so an over-generous limit only costs a little balance, never a revert.
     gas = 3_000_000n + BigInt(calldata.length) * 400n;
   }
@@ -267,7 +267,7 @@ export async function readBalanceOf(collectionAddress, account) {
  * Figure out which tokens of a collection belong to `account`.
  *
  * MVP approach (no indexer, no backend, no ERC721Enumerable): iterate token
- * ids [0, totalMinted) and ask ownerOf(). Fine for testnet scale. Burned
+ * ids [0, totalMinted) and ask ownerOf(). Fine for MVP scale. Burned
  * tokens revert ownerOf, which we catch and skip. A future indexer replaces
  * this at scale (documented, honest).
  *

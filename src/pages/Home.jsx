@@ -118,7 +118,7 @@ export default function Home() {
       {/* CTA */}
       <section className="cta">
         <h2>Ready to gate your product?</h2>
-        <p>Deploy your first collection on BOT Chain Testnet today. Free testnet BOT available from the faucet.</p>
+        <p>Deploy your first collection on BOT Chain Mainnet today.</p>
         <Link to="/create" className="btn btn--primary btn--lg">
           Get Started
         </Link>

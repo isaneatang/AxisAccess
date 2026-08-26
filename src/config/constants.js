@@ -17,7 +17,8 @@ export const ACCESS_TIERS = ["Basic", "Pro", "Premium", "Enterprise"];
 /** localStorage key for the local collection registry (UI convenience only). */
 export const COLLECTIONS_STORAGE_KEY = "axispass.collections.v1";
 
-/** Official BOT Chain testnet faucet. Do not invent another one. */
+/** Official BOT Chain testnet faucet. Testnet-only; mainnet has no faucet,
+ * so the UI only shows faucet links when the active chain defines one. */
 export const FAUCET_URL = "https://faucet.bohr.life/en/basic";
 
 /**

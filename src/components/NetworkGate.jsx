@@ -1,10 +1,10 @@
 /**
  * src/components/NetworkGate.jsx
  * ------------------------------
- * The "BOT Chain Testnet is required" banner.
+ * The "BOT Chain Mainnet is required" banner.
  *
  * Shown on pages that need a transaction when the connected wallet is on
- * the wrong network. One button: "Switch to BOT Chain Testnet", which asks
+ * the wrong network. One button: "Switch to BOT Chain Mainnet", which asks
  * the wallet (with its own approval UI, never silently). If the wallet
  * cannot switch, the friendly error message explains how to add the chain
  * manually.

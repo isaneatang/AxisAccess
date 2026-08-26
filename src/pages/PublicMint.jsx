@@ -4,11 +4,11 @@
  * The buyer-facing PUBLIC mint page (spec sections 23, 27-28).
  *
  * URL shape (deterministic, no backend):
- *   /mint?chain=968&contract=0x...
+ *   /mint?chain=677&contract=0x...
  *
  * Anyone can VIEW the collection without a wallet. To mint, the buyer:
  *   1. connects their wallet (Reown picker: extension or mobile QR)
- *   2. gets switched to BOT Chain Testnet (wallet approval required)
+ *   2. gets switched to BOT Chain Mainnet (wallet approval required)
  *   3. we check balanceOf(buyer) for the one-pass-per-wallet rule
  *   4. they pay mintPrice and the NFT lands in their wallet (real tx)
  *
@@ -25,7 +25,7 @@ import { isValidAddress } from "../utils/validation";
 import { friendlyErrorMessage } from "../utils/errors";
 import { useTxFlow } from "../utils/tx";
 import { formatUSDT, shortenAddress, txExplorerUrl, addressExplorerUrl } from "../utils/formatting";
-import { buildMintUrl, FAUCET_URL } from "../config/constants";
+import { buildMintUrl } from "../config/constants";
 import { ACTIVE_CHAIN } from "../config/chains";
 import TransactionStatus from "../components/TransactionStatus";
 import NetworkGate from "../components/NetworkGate";
@@ -319,9 +319,11 @@ export default function PublicMint() {
                 <p className="field-hint">
                   Get USDT on B DEX or bridge it in. A little native BOT for gas is still required.
                 </p>
-                <a className="btn btn--secondary btn--sm" href={FAUCET_URL} target="_blank" rel="noreferrer">
-                  Open faucet
-                </a>
+                {ACTIVE_CHAIN.faucetUrl && (
+                  <a className="btn btn--secondary btn--sm" href={ACTIVE_CHAIN.faucetUrl} target="_blank" rel="noreferrer">
+                    Open faucet
+                  </a>
+                )}
               </div>
             </div>
           ) : (

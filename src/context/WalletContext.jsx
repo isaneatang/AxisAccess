@@ -87,11 +87,11 @@ export function WalletProvider({ children }) {
   }, [appKitDisconnect]);
 
   /**
-   * Ask the wallet to switch to BOT Chain Testnet. Never silent: the wallet
+   * Ask the wallet to switch to BOT Chain Mainnet. Never silent: the wallet
    * shows its own approval UI. On failure we surface a friendly message and
    * the manual add-chain hint.
    *
-   * Most mobile wallets do not know chain 968 ("No network" / "Can't
+   * Most mobile wallets do not know chain 677 ("No network" / "Can't
    * connect" come from exactly this), so when the switch fails because the
    * chain is NOT CONFIGURED (EIP-1193 code 4902), we first try to ADD it
    * via wallet_addEthereumChain, then retry the switch once. If that also

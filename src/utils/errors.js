@@ -131,13 +131,13 @@ export function friendlyErrorMessage(err, context = "transaction") {
   // 4902 = the chain is not configured in the wallet at all.
   if (code === 4902 || /chain.*not.*(added|configur)/i.test(haystack)) {
     return {
-      message: "BOT Chain Testnet is not configured in this wallet. Add it to continue.",
+      message: "BOT Chain Mainnet is not configured in this wallet. Add it to continue.",
       faucet: false,
     };
   }
 
   // The wallet could not estimate gas for the transaction (typical on
-  // mobile wallets for chain 968, especially large deploys).
+  // mobile wallets for chain 677, especially large deploys).
   if (GAS_ESTIMATION_PATTERNS.some((re) => re.test(haystack))) {
     return {
       message:
@@ -172,7 +172,7 @@ export function friendlyErrorMessage(err, context = "transaction") {
 
   if (NETWORK_PATTERNS.some((re) => re.test(haystack))) {
     return {
-      message: "BOT Chain Testnet is required. Please switch networks and try again.",
+      message: "BOT Chain Mainnet is required. Please switch networks and try again.",
       faucet: false,
     };
   }
@@ -222,7 +222,7 @@ export function friendlyErrorMessage(err, context = "transaction") {
   }
   if (context === "network") {
     return {
-      message: "Could not switch networks. Please switch to BOT Chain Testnet in your wallet.",
+      message: "Could not switch networks. Please switch to BOT Chain Mainnet in your wallet.",
       faucet: false,
     };
   }

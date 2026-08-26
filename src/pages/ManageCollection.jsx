@@ -376,7 +376,7 @@ export default function ManageCollection() {
                 </button>
               </div>
               {!isOnActiveNetwork && (
-                <p className="field-hint">Connect on BOT Chain Testnet to use creator controls.</p>
+                <p className="field-hint">Connect on BOT Chain Mainnet to use creator controls.</p>
               )}
             </>
           ) : (

@@ -109,7 +109,7 @@ export default function CreatePass() {
     }
 
     // Never fire a deployment from the wrong network. Ask the wallet to
-    // switch to BOT Chain Testnet first (with its own approval UI); if it
+    // switch to BOT Chain Mainnet first (with its own approval UI); if it
     // cannot, stop here - the friendly error + manual add-chain hint are
     // shown by NetworkGate. Deploying anyway is how you get "No network" /
     // "Can't connect" from mobile wallets.
@@ -204,7 +204,7 @@ export default function CreatePass() {
           </div>
           <h1 className="success-screen__title">Collection Deployed</h1>
           <p className="success-screen__subtitle">
-            {form.productName} is live on BOT Chain Testnet. Share the mint link so buyers can start minting.
+            {form.productName} is live on BOT Chain Mainnet. Share the mint link so buyers can start minting.
           </p>
 
           <dl className="result-list result-list--center">

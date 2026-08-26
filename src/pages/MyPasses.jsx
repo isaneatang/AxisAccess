@@ -12,7 +12,7 @@
  * and are skipped gracefully. RPC errors per collection are tolerated.
  *
  * Honest note: this is O(totalMinted) RPC calls per collection, which is
- * fine on a testnet-scale demo. A real indexer replaces this at scale.
+ * fine at MVP scale. A real indexer replaces this at scale.
  *
  * Actions per pass: View (explorer), Send, Burn. Send uses
  * safeTransferFrom, Burn uses burn(), both real wallet-approved txs.

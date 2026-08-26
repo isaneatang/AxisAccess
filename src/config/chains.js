@@ -6,11 +6,11 @@
  *
  * `ACTIVE_NETWORK_KEY` is the master switch:
  *
- *   export const ACTIVE_NETWORK_KEY = "botTestnet";  // default: TESTNET FIRST
+ *   export const ACTIVE_NETWORK_KEY = "botMainnet";  // active: MAINNET
  *
- * Flip it to "botMainnet" later and the whole app follows. Mainnet is
- * configured but dormant: only the ACTIVE chain is passed to Reown AppKit
- * and viem, so no code path can ever deploy to mainnet by accident.
+ * The app currently runs on BOT Chain Mainnet. Testnet stays configured but
+ * dormant: only the ACTIVE chain is passed to Reown AppKit and viem, so no
+ * code path can ever touch the dormant chain by accident.
  */
 
 import { defineChain } from "viem";
